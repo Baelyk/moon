@@ -1,12 +1,24 @@
 extern crate piston_window;
 
+/// Module for entities (e.g. items, player, enemies)
+mod entity;
+mod vector;
+
+use entity::Direction;
+use entity::Player;
 use piston_window::draw_state::Blend;
 use piston_window::*; // TODO: Let's try and limit this down to what we need
 use std::path::Path;
+use vector::Vec2u;
 
-const WINDOW_WIDTH: usize = 800;
-const WINDOW_HEIGHT: usize = 500;
+/// The width of the game window
+const WINDOW_WIDTH: usize = 832;
+/// The height of the game window
+const WINDOW_HEIGHT: usize = 512;
+/// The default background color, white
 const BACK_COLOR: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
+/// The dimensions of tiles (squares)
+const TILE_SIZE: usize = 32;
 
 fn main() {
     let mut window: PistonWindow =
@@ -20,12 +32,10 @@ fn main() {
         stencil: None,
         blend: Some(Blend::Alpha),
     };
-    let mut character_x: f64 = 0.0;
-    let mut character_y: f64 = 0.0;
-    let mut character = Image::new().rect([character_x, character_y, 11.0, 26.0]);
+    let mut character = Player::new();
     let texture = Texture::from_path(
         &mut window.factory,
-        Path::new("assets/sprites/character.png"),
+        Path::join(Path::new("assets/sprites/"), &character.texture),
         Flip::None,
         &TextureSettings::new(),
     ).unwrap();
@@ -34,24 +44,20 @@ fn main() {
         window.draw_2d(&event, |c, g| {
             clear(BACK_COLOR, g);
 
-            character.draw(&texture, &alpha_state, c.transform, g);
+            character.image.draw(&texture, &alpha_state, c.transform, g);
             // image(&texture, c.transform, g);
         });
         if let Some(Button::Keyboard(Key::Up)) = event.press_args() {
-            character_y -= 1.0;
-            character = Image::new().rect([character_x, character_y, 11.0, 26.0]);
+            character.move_in(Direction::Up);
         }
         if let Some(Button::Keyboard(Key::Left)) = event.press_args() {
-            character_x -= 1.0;
-            character = Image::new().rect([character_x, character_y, 11.0, 26.0]);
+            character.move_in(Direction::Left);
         }
         if let Some(Button::Keyboard(Key::Down)) = event.press_args() {
-            character_y += 1.0;
-            character = Image::new().rect([character_x, character_y, 11.0, 26.0]);
+            character.move_in(Direction::Down);
         }
         if let Some(Button::Keyboard(Key::Right)) = event.press_args() {
-            character_x += 1.0;
-            character = Image::new().rect([character_x, character_y, 11.0, 26.0]);
+            character.move_in(Direction::Right);
         }
     }
 }
