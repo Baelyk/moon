@@ -1,11 +1,14 @@
 extern crate piston_window;
 
-/// Module for entities (e.g. items, player, enemies)
-mod entity;
+mod engine;
 mod vector;
 
-use entity::Direction;
-use entity::Player;
+use engine::entity::Enemy;
+use engine::entity::Entity;
+use engine::entity::Player;
+use engine::Direction;
+use engine::Engine;
+use engine::World;
 use piston_window::draw_state::Blend;
 use piston_window::*; // TODO: Let's try and limit this down to what we need
 use std::path::Path;
@@ -32,10 +35,21 @@ fn main() {
         stencil: None,
         blend: Some(Blend::Alpha),
     };
-    let mut character = Player::new();
-    let texture = Texture::from_path(
+    let engine: Engine = Engine::new(
+        &Vec2u::new(WINDOW_WIDTH, WINDOW_HEIGHT),
+        &Vec2u::new(TILE_SIZE, TILE_SIZE),
+    );
+    let mut character = Player::new(engine);
+    let mut baddie = Enemy::new(&engine);
+    let player_texture = Texture::from_path(
         &mut window.factory,
         Path::join(Path::new("assets/sprites/"), &character.texture),
+        Flip::None,
+        &TextureSettings::new(),
+    ).unwrap();
+    let enemy_texture = Texture::from_path(
+        &mut window.factory,
+        Path::join(Path::new("assets/sprites/"), &baddie.texture),
         Flip::None,
         &TextureSettings::new(),
     ).unwrap();
@@ -44,8 +58,12 @@ fn main() {
         window.draw_2d(&event, |c, g| {
             clear(BACK_COLOR, g);
 
-            character.image.draw(&texture, &alpha_state, c.transform, g);
-            // image(&texture, c.transform, g);
+            character
+                .image
+                .draw(&player_texture, &alpha_state, c.transform, g);
+            baddie
+                .image
+                .draw(&enemy_texture, &alpha_state, c.transform, g);
         });
         if let Some(Button::Keyboard(Key::Up)) = event.press_args() {
             character.move_in(Direction::Up);
